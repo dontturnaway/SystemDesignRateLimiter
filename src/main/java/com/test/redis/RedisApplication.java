@@ -24,11 +24,15 @@ public class RedisApplication {
 		redisService.save("user:2", "Jack Daniels");
 
 		System.out.println("Getting keys:");
-		String user1Name =  redisService.get("key1");
-		String user2Name =  redisService.get("key2");
+		String user1Name =  redisService.get("user:1");
+		String user2Name =  redisService.get("user:2");
 
 		System.out.println("User1 name is " + user1Name);
 		System.out.println("User2 name is " + user2Name);
+
+		System.out.println("Work with TTL");
+		System.out.println("User1 expire time in Mins is: " + redisService.getTTL("user:1"));
+		System.out.println("User1 expire time in Mins is: " + redisService.getTTL("user:2"));
 
 		System.out.println();
 		System.out.println("===Working with JSON===");
