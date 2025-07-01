@@ -4,12 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.sql.Time;
+import java.time.Duration;
+
 @Service
 public class RedisDashboardService {
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
-
+    private final Duration cacheTTL = Duration.ofMinutes(100);
 
     public RedisDashboardService(StringRedisTemplate redisTemplate, ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
@@ -19,7 +22,7 @@ public class RedisDashboardService {
     public void saveDashboard(String key, Dashboard dashboard) {
         try {
             String json = objectMapper.writeValueAsString(dashboard);
-            redisTemplate.opsForValue().set(key, json);
+            redisTemplate.opsForValue().set(key, json, cacheTTL);
         } catch (Exception e) {
             throw new RuntimeException("Could not serialize Dashboard", e);
         }
