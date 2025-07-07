@@ -1,4 +1,4 @@
-package com.test.redis;
+package com.test.ratelimiter;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;

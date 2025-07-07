@@ -1,4 +1,4 @@
-package com.test.redis;
+package com.test.ratelimiter;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
