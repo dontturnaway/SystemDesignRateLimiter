@@ -1,9 +1,9 @@
 package com.test.ratelimiter;
 
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -11,31 +11,37 @@ public class ProxyController {
 
     private final WebClient webClient = WebClient.create();
 
-    @RequestMapping("/{url}/**")
-    public Mono<String> proxy(ServerWebExchange exchange, @PathVariable String url) {
-        String backendUrl;
+    @RequestMapping("/{url}")
+    public Mono<String> proxy(
+            @PathVariable String url,
+            @RequestHeader HttpHeaders headers,
+            @RequestBody(required = false) Mono<String> body,
+            HttpMethod method
+    ) {
+        String targetUrl;
 
         switch (url) {
-            case "redis":
-                backendUrl = "http://localhost:8080";
+            case "atlassian":
+                targetUrl = "https://www.atlassian.com/software";
                 break;
-            case "rate-limiter":
-                backendUrl = "http://localhost:8081";
+            case "news":
+                targetUrl = "https://news.ru/";
                 break;
             default:
                 return Mono.just("Invalid URL");
         }
 
-        String path = exchange.getRequest().getPath().subPath(1).value(); // full path after /
-        String targetUri = backendUrl + "/" + path;
-
-        return webClient.method(exchange.getRequest().getMethod())
-                .uri(targetUri)
+        return webClient.method(method)
+                .uri(targetUrl)
+                //.headers(httpHeaders -> httpHeaders.addAll(headers))
                 .headers(httpHeaders -> {
-                    exchange.getRequest().getHeaders().forEach(httpHeaders::addAll);
+                    headers.forEach((key, values) -> {
+                        if (!key.equalsIgnoreCase(HttpHeaders.HOST)) {
+                            httpHeaders.addAll(key, values);
+                        }
+                    });
                 })
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(exchange.getRequest().getBody(), String.class)
+                .body(body != null ? body : Mono.empty(), String.class)
                 .retrieve()
                 .bodyToMono(String.class);
     }

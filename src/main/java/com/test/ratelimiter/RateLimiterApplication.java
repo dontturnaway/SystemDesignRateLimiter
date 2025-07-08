@@ -13,7 +13,7 @@ public class RateLimiterApplication {
 	}
 
 	@Bean
-	CommandLineRunner init(RedisService redisService, RedisDashboardService redisDashboardService) {
+	CommandLineRunner init(RedisService redisService) {
 		System.out.println("Bootstrapping Redis with some values...");
 
 		return args -> {};
