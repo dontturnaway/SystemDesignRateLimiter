@@ -21,11 +21,11 @@ public class ProxyController {
         String targetUrl;
 
         switch (url) {
-            case "atlassian":
-                targetUrl = "https://www.atlassian.com/software";
+            case "archive":
+                targetUrl = "https://web.archive.org/";
                 break;
-            case "news":
-                targetUrl = "https://news.ru/";
+            case "javadoc":
+                targetUrl = "https://docs.oracle.com/javase/8/docs/api/java/lang/String.html";
                 break;
             default:
                 return Mono.just("Invalid URL");
@@ -36,11 +36,11 @@ public class ProxyController {
                 //.headers(httpHeaders -> httpHeaders.addAll(headers))
                 .headers(httpHeaders -> {
                     headers.forEach((key, values) -> {
-                        if (!key.equalsIgnoreCase(HttpHeaders.HOST)) {
+                        if (!HttpHeaders.HOST.equalsIgnoreCase(key)) {
                             httpHeaders.addAll(key, values);
                         }
                     });
-                })
+                }) //remove HOST header to avoid using wrong port and add all other headers
                 .body(body != null ? body : Mono.empty(), String.class)
                 .retrieve()
                 .bodyToMono(String.class);
