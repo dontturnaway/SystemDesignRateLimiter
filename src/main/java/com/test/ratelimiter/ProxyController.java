@@ -16,8 +16,7 @@ public class ProxyController {
             @PathVariable String url,
             @RequestHeader HttpHeaders headers,
             @RequestBody(required = false) Mono<String> body,
-            HttpMethod method
-    ) {
+            HttpMethod method) {
         String targetUrl;
 
         switch (url) {
