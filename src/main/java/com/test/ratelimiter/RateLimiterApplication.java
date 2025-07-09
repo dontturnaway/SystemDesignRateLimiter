@@ -1,5 +1,6 @@
 package com.test.ratelimiter;
 
+import com.test.ratelimiter.service.RedisService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

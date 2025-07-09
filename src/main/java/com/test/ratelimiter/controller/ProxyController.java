@@ -1,4 +1,4 @@
-package com.test.ratelimiter;
+package com.test.ratelimiter.controller;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
