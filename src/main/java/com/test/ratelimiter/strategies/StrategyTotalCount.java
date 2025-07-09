@@ -8,7 +8,7 @@ public class StrategyTotalCount implements RateLimiterStrategyInterface {
 
 
     @Override
-    public boolean checkThreshold(FilterField filterField) {
+    public boolean passRequest(FilterField filterField) {
         return false;
     }
 

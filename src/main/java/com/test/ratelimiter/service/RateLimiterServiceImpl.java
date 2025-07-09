@@ -6,7 +6,6 @@ import com.test.ratelimiter.strategies.RateLimitStrategyType;
 import com.test.ratelimiter.strategies.RateLimiterStrategyInterface;
 import com.test.ratelimiter.strategies.StrategySlidingWindow;
 import com.test.ratelimiter.strategies.StrategyTotalCount;
-import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
@@ -29,8 +28,8 @@ public class RateLimiterServiceImpl implements RateLimiterService {
         this.thresholdSize = thresholdSize;
     }
 
-    public boolean tryAcquire(FilterField filterField) {
-        return rateLimiterStrategy.checkThreshold(filterField);
+    public boolean passRequest(FilterField filterField) {
+        return rateLimiterStrategy.passRequest(filterField);
     }
 
     public String getStrategyInfo() {

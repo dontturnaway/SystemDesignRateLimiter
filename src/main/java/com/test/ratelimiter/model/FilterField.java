@@ -10,4 +10,14 @@ public abstract class FilterField {
         }
         this.value = fieldValue;
     }
+
+    @Override
+    public String toString() {
+        return this.value.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return this.value.compareTo(o.toString()) == 0;
+    }
 }

@@ -1,6 +1,5 @@
 package com.test.ratelimiter.controller;
 
-import com.test.ratelimiter.model.FilterField;
 import com.test.ratelimiter.model.FilterFieldIP;
 import com.test.ratelimiter.service.RateLimiterService;
 import com.test.ratelimiter.service.RateLimiterServiceImpl;
@@ -8,7 +7,6 @@ import com.test.ratelimiter.strategies.RateLimitStrategyType;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -21,7 +19,7 @@ public class ProxyController {
     private final WebClient webClient = WebClient.create();
     private final RateLimiterService rateLimiterService =
             new RateLimiterServiceImpl(RateLimitStrategyType.SLIDING_WINDOW,
-                                        Duration.ofMinutes(10),
+                                        Duration.ofMinutes(1),
                                         10);
 
     @RequestMapping("/{url}")
@@ -50,7 +48,7 @@ public class ProxyController {
         FilterFieldIP ipToFilter = new FilterFieldIP(request.getRemoteAddr());
         System.out.println(rateLimiterService.getStatistics(ipToFilter));
 
-        if (!rateLimiterService.tryAcquire(ipToFilter)) {
+        if (!rateLimiterService.passRequest(ipToFilter)) {
 
             return Mono.just("Rate limit exceeded")
                     .flatMap(msg -> Mono.error(new org.springframework.web.server.ResponseStatusException(

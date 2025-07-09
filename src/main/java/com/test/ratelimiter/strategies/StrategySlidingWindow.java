@@ -35,7 +35,7 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
     }
 
     @Override
-    public boolean checkThreshold(FilterField filterField) {
+    public boolean passRequest(FilterField filterField) {
 
         if (!(filterField instanceof FilterFieldIP ipField)) {
             throw new IllegalArgumentException("Expected FilterFieldIP");
@@ -43,18 +43,18 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
 
         synchronized (this) {
             this.updateStatisticsByIp(ipField);
-            return requestCounter.get(ipField) > thresholdSize;
+            return requestCounter.get(ipField) < thresholdSize;
         }
     }
 
     private void updateStatisticsByIp(FilterFieldIP ipField) {
         synchronized (this) {
-            requestCounter.put(ipField, requestCounter.getOrDefault(ipField, 0) + 1);
-            requestQueue.add(Map.of(ipField, Instant.now()));
             while (!requestQueue.isEmpty() && fitsSlidingWindow(requestQueue.peek())) {
                 FilterFieldIP currentFilterFieldIP = requestQueue.poll().entrySet().iterator().next().getKey();
                 requestCounter.put(currentFilterFieldIP, requestCounter.get(currentFilterFieldIP) - 1);
             }
+            requestCounter.put(ipField, requestCounter.getOrDefault(ipField, 0) + 1);
+            requestQueue.add(Map.of(ipField, Instant.now()));
         }
     }
 
