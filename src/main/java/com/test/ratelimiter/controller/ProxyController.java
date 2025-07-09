@@ -41,7 +41,9 @@ public class ProxyController {
                 targetUrl = "https://docs.oracle.com/javase/8/docs/api/java/lang/String.html";
                 break;
             default:
-                return Mono.just("Invalid URL");
+                return Mono.error(new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST, "URL path must be archive or javadoc"
+                ));
         }
 
         FilterFieldIP ipToFilter = new FilterFieldIP(request.getRemoteAddress().getAddress().getHostAddress());
