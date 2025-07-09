@@ -1,6 +1,6 @@
 package com.test.ratelimiter;
 
-import com.test.ratelimiter.service.RedisService;
+import com.test.ratelimiter.service.RedisServiceImpl;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,7 +14,7 @@ public class RateLimiterApplication {
 	}
 
 	@Bean
-	CommandLineRunner init(RedisService redisService) {
+	CommandLineRunner init(RedisServiceImpl redisServiceImpl) {
 		System.out.println("Bootstrapping Redis with some values...");
 
 		return args -> {};

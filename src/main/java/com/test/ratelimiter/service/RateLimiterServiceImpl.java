@@ -7,10 +7,10 @@ import com.test.ratelimiter.strategies.RateLimiterStrategyInterface;
 import com.test.ratelimiter.strategies.StrategySlidingWindow;
 import com.test.ratelimiter.strategies.StrategyTotalCount;
 
-public abstract class RateLimiterService implements RateLimiterStrategyInterface {
+public abstract class RateLimiterServiceImpl implements RateLimiterStrategyInterface {
     private RateLimiterStrategyInterface rateLimiterStrategy;
 
-    public RateLimiterService(RateLimitStrategyType rateLimitStrategyType) {
+    public RateLimiterServiceImpl(RateLimitStrategyType rateLimitStrategyType) {
         switch (rateLimitStrategyType) {
             case SLIDING_WINDOW -> this.rateLimiterStrategy = new StrategySlidingWindow();
             case TOTAL_COUNT -> this.rateLimiterStrategy = new StrategyTotalCount();
