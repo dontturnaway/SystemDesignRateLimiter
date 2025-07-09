@@ -18,6 +18,9 @@ public class RateLimiterServiceImpl implements RateLimiterService {
     public RateLimiterServiceImpl(RateLimitStrategyType rateLimitStrategyType,
                                   Duration slidingWindowDuration,
                                   Integer thresholdSize) {
+        if (slidingWindowDuration == null || thresholdSize == null) {
+            throw new IllegalArgumentException("slidingWindowDuration and thresholdSize cannot be null");
+        }
         switch (rateLimitStrategyType) {
             case SLIDING_WINDOW -> this.rateLimiterStrategy = new StrategySlidingWindow(slidingWindowDuration, thresholdSize);
             case TOTAL_COUNT -> this.rateLimiterStrategy = new StrategyTotalCount();
@@ -35,10 +38,13 @@ public class RateLimiterServiceImpl implements RateLimiterService {
     }
 
     public String getStatistics(FilterField filterField) {
+        if (filterField == null) {
+            throw new IllegalArgumentException("filterField cannot be null");
+        }
         return "Your IP hits :"
-                + rateLimiterStrategy.getStatistics(filterField).get("Sliding Window Threshold").toString()
-                + "Current threshold: "
-                + rateLimiterStrategy.getStatistics(filterField).get("Sliding Window Requests");
+                + rateLimiterStrategy.getStatistics(filterField).getOrDefault("REQUESTS",0).toString()
+                + " Current threshold: "
+                + rateLimiterStrategy.getStatistics(filterField).getOrDefault("THRESHOLD",0).toString();
     }
 
 

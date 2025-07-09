@@ -27,6 +27,9 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
     private final Integer thresholdSize;
 
     public StrategySlidingWindow(Duration slidingWindowDuration, Integer thresholdSize) {
+        if (slidingWindowDuration == null || thresholdSize == null) {
+            throw new IllegalArgumentException("slidingWindowDuration and thresholdSize cannot be null");
+        }
         this.slidingWindowDuration = slidingWindowDuration;
         this.thresholdSize = thresholdSize;
     }
@@ -36,10 +39,6 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
 
         if (!(filterField instanceof FilterFieldIP ipField)) {
             throw new IllegalArgumentException("Expected FilterFieldIP");
-        }
-
-        if (slidingWindowDuration == null) {
-            throw new IllegalArgumentException("Duration cannot be null");
         }
 
         synchronized (this) {
@@ -62,7 +61,7 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
     public boolean fitsSlidingWindow(Map<FilterFieldIP, Instant> currentIpDate) {
         Instant currentIpDateExtracted = currentIpDate.entrySet().iterator().next().getValue();
         Duration elapsed = Duration.between(currentIpDateExtracted, Instant.now());
-        if (elapsed.compareTo(slidingWindowDuration) < 0) {
+        if (slidingWindowDuration.compareTo(elapsed) > 0) {
             return true;
         }
         return false;
@@ -79,8 +78,8 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
             throw new IllegalArgumentException("Expected FilterFieldIP");
         }
         HashMap<String, Integer> result = new HashMap<>();
-        result.put("Sliding Window Requests", requestCounter.get(ipField));
-        result.put("Sliding Window Threshold", this.thresholdSize);
+        result.put("REQUESTS", requestCounter.getOrDefault(ipField,0));
+        result.put("THRESHOLD", this.thresholdSize);
         return result;
     }
 
