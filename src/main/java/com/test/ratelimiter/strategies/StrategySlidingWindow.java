@@ -24,9 +24,11 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
     private final HashMap<FilterFieldIP, Integer> requestCounter = new HashMap<>();
     private final Queue<Map<FilterFieldIP, Instant>> requestQueue = new LinkedList<>();
     private final java.time.Duration slidingWindowDuration;
+    private final Integer thresholdSize;
 
     public StrategySlidingWindow(Duration slidingWindowDuration, Integer thresholdSize) {
         this.slidingWindowDuration = slidingWindowDuration;
+        this.thresholdSize = thresholdSize;
     }
 
     @Override
@@ -41,6 +43,13 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
         }
 
         synchronized (this) {
+            this.updateStatisticsByIp(ipField);
+            return requestCounter.get(ipField) > thresholdSize;
+        }
+    }
+
+    private void updateStatisticsByIp(FilterFieldIP ipField) {
+        synchronized (this) {
             requestCounter.put(ipField, requestCounter.getOrDefault(ipField, 0) + 1);
             requestQueue.add(Map.of(ipField, Instant.now()));
             while (!requestQueue.isEmpty() && fitsSlidingWindow(requestQueue.peek())) {
@@ -48,8 +57,6 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
                 requestCounter.put(currentFilterFieldIP, requestCounter.get(currentFilterFieldIP) - 1);
             }
         }
-
-        return false;
     }
 
     public boolean fitsSlidingWindow(Map<FilterFieldIP, Instant> currentIpDate) {
@@ -66,6 +73,16 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
         return "Sliding window strategy";
     }
 
+    @Override
+    public HashMap<String, Integer> getStatistics(FilterField filterField) {
+        if (!(filterField instanceof FilterFieldIP ipField)) {
+            throw new IllegalArgumentException("Expected FilterFieldIP");
+        }
+        HashMap<String, Integer> result = new HashMap<>();
+        result.put("Sliding Window Requests", requestCounter.get(ipField));
+        result.put("Sliding Window Threshold", this.thresholdSize);
+        return result;
+    }
 
 
 }

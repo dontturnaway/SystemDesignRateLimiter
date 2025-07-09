@@ -1,22 +1,36 @@
 package com.test.ratelimiter.controller;
 
+import com.test.ratelimiter.model.FilterField;
+import com.test.ratelimiter.model.FilterFieldIP;
+import com.test.ratelimiter.service.RateLimiterService;
+import com.test.ratelimiter.service.RateLimiterServiceImpl;
+import com.test.ratelimiter.strategies.RateLimitStrategyType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 @RestController
 public class ProxyController {
 
     private final WebClient webClient = WebClient.create();
+    private final RateLimiterService rateLimiterService =
+            new RateLimiterServiceImpl(RateLimitStrategyType.SLIDING_WINDOW,
+                                        Duration.ofMinutes(1),
+                                        10);
 
     @RequestMapping("/{url}")
     public Mono<String> proxy(
             @PathVariable String url,
             @RequestHeader HttpHeaders headers,
             @RequestBody(required = false) Mono<String> body,
-            HttpMethod method) {
+            HttpMethod method,
+            ServerHttpRequest request
+            ) {
         String targetUrl;
 
         switch (url) {
@@ -29,6 +43,15 @@ public class ProxyController {
             default:
                 return Mono.just("Invalid URL");
         }
+
+        FilterFieldIP ipToFilter = new FilterFieldIP(request.getRemoteAddress().getAddress().getHostAddress());
+        if (!rateLimiterService.tryAcquire(ipToFilter)) {
+            return Mono.just("Rate limit exceeded")
+                    .flatMap(msg -> Mono.error(new org.springframework.web.server.ResponseStatusException(
+                            org.springframework.http.HttpStatus.TOO_MANY_REQUESTS, msg
+                    )));
+        }
+        System.out.println(rateLimiterService.getStatistics(ipToFilter));
 
         return webClient.method(method)
                 .uri(targetUrl)
