@@ -2,8 +2,8 @@ package com.test.ratelimiter.service;
 
 import com.test.ratelimiter.model.FilterField;
 
-public interface RateLimiterService {
-    boolean passRequest(FilterField filterField);
+public interface RateLimiterService<T> {
+    boolean passRequest(FilterField<T> filterField);
     String getStrategyInfo();
-    String getStatistics(FilterField filterField);
+    String getStatistics(FilterField<T> filterField);
 }
