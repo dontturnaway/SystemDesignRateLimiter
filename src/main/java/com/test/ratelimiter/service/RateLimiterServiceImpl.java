@@ -11,8 +11,8 @@ import java.time.Duration;
 
 public class RateLimiterServiceImpl<T> implements RateLimiterService<T> {
     private RateLimiterStrategyInterface<T> rateLimiterStrategy;
-    private Duration slidingWindowDuration;
-    private Integer thresholdSize;
+    private final Duration slidingWindowDuration;
+    private final Integer thresholdSize;
 
     public RateLimiterServiceImpl(RateLimitStrategyType rateLimitStrategyType,
                                   Duration slidingWindowDuration,
