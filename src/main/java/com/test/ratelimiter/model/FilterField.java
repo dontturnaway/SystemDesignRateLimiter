@@ -18,6 +18,15 @@ public abstract class FilterField {
 
     @Override
     public boolean equals(Object o) {
-        return this.value.compareTo(o.toString()) == 0;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FilterField other = (FilterField) o;
+        return this.value.equals(other.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
     }
 }

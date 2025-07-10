@@ -46,7 +46,6 @@ public class ProxyController {
         }
 
         FilterFieldIP ipToFilter = new FilterFieldIP(request.getRemoteAddr());
-        System.out.println(rateLimiterService.getStatistics(ipToFilter));
 
         if (!rateLimiterService.passRequest(ipToFilter)) {
 

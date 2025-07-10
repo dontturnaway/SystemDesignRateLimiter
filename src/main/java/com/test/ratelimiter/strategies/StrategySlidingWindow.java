@@ -43,15 +43,17 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
 
         synchronized (this) {
             this.updateStatisticsByIp(ipField);
-            return requestCounter.get(ipField) < thresholdSize;
+            var result =  requestCounter.get(ipField) <= thresholdSize;
+            System.out.println("RESULT: " + result + " REQUEST_COUNT: " + requestCounter.get(ipField));
+            return result;
         }
     }
 
     private void updateStatisticsByIp(FilterFieldIP ipField) {
         synchronized (this) {
-            while (!requestQueue.isEmpty() && fitsSlidingWindow(requestQueue.peek())) {
-                FilterFieldIP currentFilterFieldIP = requestQueue.poll().entrySet().iterator().next().getKey();
-                requestCounter.put(currentFilterFieldIP, requestCounter.get(currentFilterFieldIP) - 1);
+            while (!requestQueue.isEmpty() && (!fitsSlidingWindow(requestQueue.peek()))) {
+                FilterFieldIP staleIp = requestQueue.poll().entrySet().iterator().next().getKey();
+                requestCounter.put(staleIp, requestCounter.get(staleIp) - 1);
             }
             requestCounter.put(ipField, requestCounter.getOrDefault(ipField, 0) + 1);
             requestQueue.add(Map.of(ipField, Instant.now()));
