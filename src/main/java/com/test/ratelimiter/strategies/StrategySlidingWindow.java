@@ -1,7 +1,6 @@
 package com.test.ratelimiter.strategies;
 
 import com.test.ratelimiter.model.FilterField;
-import com.test.ratelimiter.model.FilterFieldIP;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -10,7 +9,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
-public class StrategySlidingWindow implements RateLimiterStrategyInterface<byte[]> {
+public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T> {
 
     /*
     We need 2 data structures: hashmap with <IP, request_count> and Queue with map of <Timestamp, Key>.
@@ -21,8 +20,8 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface<byte[
      4. When it's done, we check the final value
      */
 
-    private final HashMap<FilterFieldIP, Integer> requestCounter = new HashMap<>();
-    private final Queue<Map<FilterFieldIP, Instant>> requestQueue = new LinkedList<>();
+    private final HashMap<FilterField<T>, Integer> requestCounter = new HashMap<>();
+    private final Queue<Map<FilterField<T>, Instant>> requestQueue = new LinkedList<>();
     private final java.time.Duration slidingWindowDuration;
     private final Integer thresholdSize;
 
@@ -35,32 +34,29 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface<byte[
     }
 
     @Override
-    public boolean passRequest(FilterField<byte[]> filterField) {
+    public boolean passRequest(FilterField<T> filterField) {
 
-        if (!(filterField instanceof FilterFieldIP ipField)) {
-            throw new IllegalArgumentException("Expected FilterFieldIP");
-        }
 
         synchronized (this) {
-            this.updateStatisticsByIp(ipField);
-            var result =  requestCounter.get(ipField) <= thresholdSize;
-            System.out.println("RESULT: " + result + " REQUEST_COUNT: " + requestCounter.get(ipField));
+            this.updateStatisticsByFilterField(filterField);
+            var result =  requestCounter.get(filterField) <= thresholdSize;
+            System.out.println("RESULT: " + result + " REQUEST_COUNT: " + requestCounter.get(filterField));
             return result;
         }
     }
 
-    private void updateStatisticsByIp(FilterFieldIP ipField) {
+    private void updateStatisticsByFilterField(FilterField<T> filterField) {
         synchronized (this) {
             while (!requestQueue.isEmpty() && (!fitsSlidingWindow(requestQueue.peek()))) {
-                FilterFieldIP staleIp = requestQueue.poll().entrySet().iterator().next().getKey();
+                FilterField<T> staleIp = requestQueue.poll().entrySet().iterator().next().getKey();
                 requestCounter.put(staleIp, requestCounter.get(staleIp) - 1);
             }
-            requestCounter.put(ipField, requestCounter.getOrDefault(ipField, 0) + 1);
-            requestQueue.add(Map.of(ipField, Instant.now()));
+            requestCounter.put(filterField, requestCounter.getOrDefault(filterField, 0) + 1);
+            requestQueue.add(Map.of(filterField, Instant.now()));
         }
     }
 
-    public boolean fitsSlidingWindow(Map<FilterFieldIP, Instant> currentIpDate) {
+    public boolean fitsSlidingWindow(Map<FilterField<T>, Instant> currentIpDate) {
         Instant currentIpDateExtracted = currentIpDate.entrySet().iterator().next().getValue();
         Duration elapsed = Duration.between(currentIpDateExtracted, Instant.now());
         if (slidingWindowDuration.compareTo(elapsed) > 0) {
@@ -69,14 +65,15 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface<byte[
         return false;
     }
 
+
     @Override
     public String getStrategyName() {
         return "Sliding window strategy";
     }
 
     @Override
-    public HashMap<String, Integer> getStatistics(FilterField<byte[]> filterField) {
-        if (!(filterField instanceof FilterFieldIP ipField)) {
+    public HashMap<String, Integer> getStatistics(FilterField<T> filterField) {
+        if (!(filterField instanceof FilterField<T> ipField)) {
             throw new IllegalArgumentException("Expected FilterFieldIP");
         }
         HashMap<String, Integer> result = new HashMap<>();

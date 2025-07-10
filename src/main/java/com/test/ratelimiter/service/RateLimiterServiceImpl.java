@@ -9,8 +9,8 @@ import com.test.ratelimiter.strategies.StrategyTotalCount;
 
 import java.time.Duration;
 
-public class RateLimiterServiceImpl implements RateLimiterService {
-    private RateLimiterStrategyInterface rateLimiterStrategy;
+public class RateLimiterServiceImpl<T> implements RateLimiterService<T> {
+    private RateLimiterStrategyInterface<T> rateLimiterStrategy;
     private Duration slidingWindowDuration;
     private Integer thresholdSize;
 
