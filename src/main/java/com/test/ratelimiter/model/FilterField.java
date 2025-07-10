@@ -1,10 +1,10 @@
 package com.test.ratelimiter.model;
 
-public abstract class FilterField {
+public abstract class FilterField<T> {
 
-    public String value;
+    public T value;
 
-    public FilterField(String fieldValue) {
+    public FilterField(T fieldValue) {
         if (fieldValue == null) {
             throw new NullPointerException("fieldValue must not be null");
         }
@@ -21,7 +21,7 @@ public abstract class FilterField {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        FilterField other = (FilterField) o;
+        FilterField<?> other = (FilterField<?>) o;
         return this.value.equals(other.value);
     }
 

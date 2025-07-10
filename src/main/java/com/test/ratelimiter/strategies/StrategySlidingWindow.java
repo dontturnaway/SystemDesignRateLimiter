@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
-public class StrategySlidingWindow implements RateLimiterStrategyInterface {
+public class StrategySlidingWindow implements RateLimiterStrategyInterface<byte[]> {
 
     /*
     We need 2 data structures: hashmap with <IP, request_count> and Queue with map of <Timestamp, Key>.
@@ -35,7 +35,7 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
     }
 
     @Override
-    public boolean passRequest(FilterField filterField) {
+    public boolean passRequest(FilterField<byte[]> filterField) {
 
         if (!(filterField instanceof FilterFieldIP ipField)) {
             throw new IllegalArgumentException("Expected FilterFieldIP");
@@ -75,7 +75,7 @@ public class StrategySlidingWindow implements RateLimiterStrategyInterface {
     }
 
     @Override
-    public HashMap<String, Integer> getStatistics(FilterField filterField) {
+    public HashMap<String, Integer> getStatistics(FilterField<byte[]> filterField) {
         if (!(filterField instanceof FilterFieldIP ipField)) {
             throw new IllegalArgumentException("Expected FilterFieldIP");
         }

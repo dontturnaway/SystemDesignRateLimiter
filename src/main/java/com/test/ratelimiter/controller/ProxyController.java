@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 
 @RestController
@@ -29,9 +31,10 @@ public class ProxyController {
             @RequestBody(required = false) Mono<String> body,
             HttpMethod method,
             HttpServletRequest request
-            ) {
+            ) throws UnknownHostException {
         String targetUrl;
 
+        //Emulating call to external services based on L7 URL routing
         switch (url) {
             case "archive":
                 targetUrl = "https://web.archive.org/";
@@ -45,10 +48,9 @@ public class ProxyController {
                 ));
         }
 
+        //Calling rate limiter service to abort processing, providing IP to it
         FilterFieldIP ipToFilter = new FilterFieldIP(request.getRemoteAddr());
-
         if (!rateLimiterService.passRequest(ipToFilter)) {
-
             return Mono.just("Rate limit exceeded")
                     .flatMap(msg -> Mono.error(new org.springframework.web.server.ResponseStatusException(
                             org.springframework.http.HttpStatus.TOO_MANY_REQUESTS, rateLimiterService.getStatistics(ipToFilter)

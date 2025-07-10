@@ -4,8 +4,8 @@ import com.test.ratelimiter.model.FilterField;
 
 import java.util.HashMap;
 
-public interface RateLimiterStrategyInterface {
-    boolean passRequest(FilterField filterField);
+public interface RateLimiterStrategyInterface<T> {
+    boolean passRequest(FilterField<T> filterField);
     String getStrategyName();
-    HashMap<String, Integer> getStatistics(FilterField filterField);
+    HashMap<String, Integer> getStatistics(FilterField<T> filterField);
 }
