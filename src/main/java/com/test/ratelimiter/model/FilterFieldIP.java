@@ -1,13 +1,13 @@
 package com.test.ratelimiter.model;
 
-public class FilterFieldIP extends FilterField<byte[]>{
+public class FilterFieldIP extends FilterField<byte[]> {
 
     public FilterFieldIP(String fieldValue) {
-        super(ipv4StringToBytes(fieldValue));
+        super(fieldValue);
     }
 
-
-    public static byte[] ipv4StringToBytes(String ip) {
+    @Override
+    protected byte[] parse(String ip) {
         String[] parts = ip.split("\\.");
         if (parts.length != 4) {
             throw new IllegalArgumentException("Invalid IPv4 address: " + ip);

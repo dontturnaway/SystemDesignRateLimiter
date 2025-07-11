@@ -11,8 +11,7 @@ import java.time.Duration;
 
 public class RateLimiterServiceImpl<T> implements RateLimiterService<T> {
     private RateLimiterStrategyInterface<T> rateLimiterStrategy;
-    private final Duration slidingWindowDuration;
-    private final Integer thresholdSize;
+
 
     public RateLimiterServiceImpl(RateLimitStrategyType rateLimitStrategyType,
                                   Duration slidingWindowDuration,
@@ -21,14 +20,12 @@ public class RateLimiterServiceImpl<T> implements RateLimiterService<T> {
             throw new IllegalArgumentException("slidingWindowDuration and thresholdSize cannot be null");
         }
         switch (rateLimitStrategyType) {
-            case SLIDING_WINDOW -> this.rateLimiterStrategy = new StrategySlidingWindow(slidingWindowDuration, thresholdSize);
-            case TOTAL_COUNT -> this.rateLimiterStrategy = new StrategyTotalCount();
+            case SLIDING_WINDOW -> this.rateLimiterStrategy = new StrategySlidingWindow<>(slidingWindowDuration, thresholdSize);
+            case TOTAL_COUNT -> this.rateLimiterStrategy = new StrategyTotalCount<>();
         }
-        this.slidingWindowDuration = slidingWindowDuration;
-        this.thresholdSize = thresholdSize;
     }
 
-    public boolean passRequest(FilterField filterField) {
+    public boolean passRequest(FilterField<T> filterField) {
         return rateLimiterStrategy.passRequest(filterField);
     }
 
@@ -36,7 +33,7 @@ public class RateLimiterServiceImpl<T> implements RateLimiterService<T> {
         return rateLimiterStrategy.toString();
     }
 
-    public String getStatistics(FilterField filterField) {
+    public String getStatistics(FilterField<T> filterField) {
         if (filterField == null) {
             throw new IllegalArgumentException("filterField cannot be null");
         }

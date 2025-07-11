@@ -1,19 +1,19 @@
 package com.test.ratelimiter.model;
 
 public abstract class FilterField<T> {
+    public final T value;
 
-    public T value;
-
-    public FilterField(T fieldValue) {
+    public FilterField(String fieldValue) {
         if (fieldValue == null) {
             throw new NullPointerException("fieldValue must not be null");
         }
-        this.value = fieldValue;
+        this.value = parse(fieldValue);
     }
+
+    protected abstract T parse(String fieldValue);
 
     @Override
     public String toString() {
-        return this.value.toString();
+        return value.toString();
     }
-
 }

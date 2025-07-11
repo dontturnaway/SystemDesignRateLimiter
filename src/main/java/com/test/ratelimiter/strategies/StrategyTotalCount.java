@@ -4,21 +4,21 @@ import com.test.ratelimiter.model.FilterField;
 
 import java.util.HashMap;
 
-public class StrategyTotalCount implements RateLimiterStrategyInterface {
+public class StrategyTotalCount<T> implements RateLimiterStrategyInterface<T> {
 
 
     @Override
-    public boolean passRequest(FilterField filterField) {
+    public boolean passRequest(FilterField<T> filterField) {
         return false;
     }
 
     @Override
     public String getStrategyName() {
-        return "";
+        return "StrategyTotalCount";
     }
 
     @Override
-    public HashMap<String, Integer> getStatistics(FilterField filterField) {
+    public HashMap<String, Integer> getStatistics(FilterField<T> filterField) {
         return null;
     }
 }

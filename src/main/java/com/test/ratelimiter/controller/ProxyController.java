@@ -11,16 +11,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.Duration;
 
 @RestController
 public class ProxyController {
 
     private final WebClient webClient = WebClient.create();
-    private final RateLimiterService rateLimiterService =
-            new RateLimiterServiceImpl(RateLimitStrategyType.SLIDING_WINDOW,
+    private final RateLimiterService<byte[]> rateLimiterService =
+            new RateLimiterServiceImpl<>(RateLimitStrategyType.SLIDING_WINDOW,
                                         Duration.ofMinutes(1),
                                         10);
 
@@ -31,7 +29,7 @@ public class ProxyController {
             @RequestBody(required = false) Mono<String> body,
             HttpMethod method,
             HttpServletRequest request
-            ) throws UnknownHostException {
+            ) {
         String targetUrl;
 
         //Emulating call to external services based on L7 URL routing
