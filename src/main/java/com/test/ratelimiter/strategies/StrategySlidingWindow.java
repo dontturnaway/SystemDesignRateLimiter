@@ -29,7 +29,6 @@ public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T>
     @Override
     public boolean passRequest(FilterField<T> filterField) {
 
-
         synchronized (this) {
             this.updateStatisticsByFilterField(filterField);
             var result =  requestCounter.get(filterField) <= thresholdSize;
