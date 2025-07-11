@@ -38,14 +38,12 @@ public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T>
     }
 
     private void updateStatisticsByFilterField(FilterField<T> filterField) {
-        synchronized (this) {
             while (!requestQueue.isEmpty() && (!fitsSlidingWindow(requestQueue.peek()))) {
                 FilterField<T> staleIp = requestQueue.poll().entrySet().iterator().next().getKey();
                 requestCounter.put(staleIp, requestCounter.get(staleIp) - 1);
             }
             requestCounter.put(filterField, requestCounter.getOrDefault(filterField, 0) + 1);
             requestQueue.add(Map.of(filterField, Instant.now()));
-        }
     }
 
     public boolean fitsSlidingWindow(Map<FilterField<T>, Instant> currentIpDate) {
