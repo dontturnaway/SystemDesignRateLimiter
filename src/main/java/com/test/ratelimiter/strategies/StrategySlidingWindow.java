@@ -65,7 +65,7 @@ public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T>
 
     @Override
     public HashMap<String, Integer> getStatistics(FilterField<T> filterField) {
-        if (!(filterField instanceof FilterField<T> ipField)) {
+        if (!(filterField instanceof FilterField<?> ipField)) {
             throw new IllegalArgumentException("Expected FilterFieldIP");
         }
         HashMap<String, Integer> result = new HashMap<>();
