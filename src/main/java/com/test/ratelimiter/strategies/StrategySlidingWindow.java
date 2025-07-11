@@ -28,7 +28,6 @@ public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T>
 
     @Override
     public boolean passRequest(FilterField<T> filterField) {
-
         synchronized (this) {
             this.updateStatisticsByFilterField(filterField);
             var result =  requestCounter.get(filterField) <= thresholdSize;
@@ -49,10 +48,7 @@ public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T>
     public boolean fitsSlidingWindow(Map<FilterField<T>, Instant> currentIpDate) {
         Instant currentIpDateExtracted = currentIpDate.entrySet().iterator().next().getValue();
         Duration elapsed = Duration.between(currentIpDateExtracted, Instant.now());
-        if (slidingWindowDuration.compareTo(elapsed) > 0) {
-            return true;
-        }
-        return false;
+        return slidingWindowDuration.compareTo(elapsed) > 0;
     }
 
 
