@@ -18,6 +18,8 @@ public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T>
      2. We pop the Queue until the value fits in sliding window shows.
      3. As soon as the pop from the Queue is in the progress, we decrement the values from the HashMap
      4. When it's done, we check the final value
+
+     Also we could do it with HashMap<Key, Queue<Timestamp>>, similar to Redis's ZSET
      */
 
     private final HashMap<FilterField<T>, Integer> requestCounter = new HashMap<>();

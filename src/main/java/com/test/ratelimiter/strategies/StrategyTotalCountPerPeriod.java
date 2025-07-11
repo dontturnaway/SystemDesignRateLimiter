@@ -4,7 +4,7 @@ import com.test.ratelimiter.model.FilterField;
 
 import java.util.HashMap;
 
-public class StrategyTotalCount<T> implements RateLimiterStrategyInterface<T> {
+public class StrategyTotalCountPerPeriod<T> implements RateLimiterStrategyInterface<T> {
 
 
     @Override

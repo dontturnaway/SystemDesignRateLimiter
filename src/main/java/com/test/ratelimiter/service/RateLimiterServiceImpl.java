@@ -5,7 +5,7 @@ import com.test.ratelimiter.model.FilterField;
 import com.test.ratelimiter.strategies.RateLimitStrategyType;
 import com.test.ratelimiter.strategies.RateLimiterStrategyInterface;
 import com.test.ratelimiter.strategies.StrategySlidingWindow;
-import com.test.ratelimiter.strategies.StrategyTotalCount;
+import com.test.ratelimiter.strategies.StrategyTotalCountPerPeriod;
 
 import java.time.Duration;
 
@@ -21,7 +21,7 @@ public class RateLimiterServiceImpl<T> implements RateLimiterService<T> {
         }
         switch (rateLimitStrategyType) {
             case SLIDING_WINDOW -> this.rateLimiterStrategy = new StrategySlidingWindow<>(slidingWindowDuration, thresholdSize);
-            case TOTAL_COUNT -> this.rateLimiterStrategy = new StrategyTotalCount<>();
+            case TOTAL_COUNT -> this.rateLimiterStrategy = new StrategyTotalCountPerPeriod<>();
         }
     }
 
