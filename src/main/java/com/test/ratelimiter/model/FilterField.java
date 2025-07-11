@@ -16,17 +16,4 @@ public abstract class FilterField<T> {
         return this.value.toString();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        FilterField<?> other = (FilterField<?>) o;
-        return this.value.equals(other.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return value.hashCode();
-    }
 }
