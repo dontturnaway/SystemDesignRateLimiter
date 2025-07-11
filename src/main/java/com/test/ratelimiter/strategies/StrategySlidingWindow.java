@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Queue;
 
 
-//Also could be done in more optimal way with HashMap<Key, Queue<Timestamp>>
+//Also could be done in more optimal way with HashMap<Key, Queue<Timestamp>> or using ZSET in Redis
 public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T> {
 
     private final HashMap<FilterField<T>, Integer> requestCounter = new HashMap<>();
