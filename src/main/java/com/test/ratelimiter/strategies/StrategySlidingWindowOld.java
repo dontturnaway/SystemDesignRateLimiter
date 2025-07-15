@@ -18,21 +18,21 @@ public class StrategySlidingWindowOld<T> implements RateLimiterStrategyInterface
     private final HashMap<FilterField<T>, Integer> requestCounter = new HashMap<>();
     private final Queue<Map<FilterField<T>, Instant>> requestQueue = new LinkedList<>();
     private final java.time.Duration slidingWindowDuration;
-    private final Integer thresholdSize;
+    private final Integer maxRequestsThreshold;
 
-    public StrategySlidingWindowOld(Duration slidingWindowDuration, Integer thresholdSize) {
-        if (slidingWindowDuration == null || thresholdSize == null) {
+    public StrategySlidingWindowOld(Duration slidingWindowDuration, Integer maxRequestsThreshold) {
+        if (slidingWindowDuration == null || maxRequestsThreshold == null) {
             throw new IllegalArgumentException("slidingWindowDuration and thresholdSize cannot be null");
         }
         this.slidingWindowDuration = slidingWindowDuration;
-        this.thresholdSize = thresholdSize;
+        this.maxRequestsThreshold = maxRequestsThreshold;
     }
 
     @Override
     public boolean passRequestByFilterField(FilterField<T> filterField) {
         synchronized (this) {
             this.updateStatisticsByFilterField(filterField);
-            var result =  requestCounter.get(filterField) <= thresholdSize;
+            var result =  requestCounter.get(filterField) <= maxRequestsThreshold;
             System.out.println("RESULT: " + result + " REQUEST_COUNT: " + requestCounter.get(filterField));
             return result;
         }
@@ -60,10 +60,11 @@ public class StrategySlidingWindowOld<T> implements RateLimiterStrategyInterface
     }
 
     @Override
-    public HashMap<String, Integer> getStatistics(FilterField<T> filterField) {
-        HashMap<String, Integer> result = new HashMap<>();
-        result.put("REQUESTS", requestCounter.getOrDefault(filterField,0));
-        result.put("THRESHOLD", this.thresholdSize);
+    public HashMap<String, Long> getStatistics(FilterField<T> filterField) {
+        HashMap<String, Long> result = new HashMap<>();
+        result.put("REQUESTS", requestCounter.getOrDefault(filterField, 0).longValue());
+        result.put("THRESHOLD", this.maxRequestsThreshold.longValue());
+        result.put("DURATION", slidingWindowDuration.toSeconds());
         return result;
     }
 

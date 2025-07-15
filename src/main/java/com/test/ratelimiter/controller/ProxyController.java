@@ -5,13 +5,13 @@ import com.test.ratelimiter.service.RateLimiterService;
 import com.test.ratelimiter.service.RateLimiterServiceImpl;
 import com.test.ratelimiter.strategies.RateLimitStrategyType;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.Map;
 
 @RestController
 public class ProxyController {
@@ -19,20 +19,19 @@ public class ProxyController {
     private final WebClient webClient = WebClient.create();
     private final RateLimiterService<byte[]> rateLimiterService =
             new RateLimiterServiceImpl<>(RateLimitStrategyType.SLIDING_WINDOW,
-                                        Duration.ofMinutes(1),
-                                        10);
+                    Duration.ofMinutes(1),
+                    5);
 
     @RequestMapping("/{url}")
-    public Mono<String> proxy(
+    public Mono<ResponseEntity<String>> proxy(
             @PathVariable String url,
             @RequestHeader HttpHeaders headers,
             @RequestBody(required = false) Mono<String> body,
             HttpMethod method,
             HttpServletRequest request
-            ) {
+    ) {
         String targetUrl;
 
-        //Emulating call to external services based on L7 URL routing
         switch (url) {
             case "archive":
                 targetUrl = "https://web.archive.org/";
@@ -41,30 +40,46 @@ public class ProxyController {
                 targetUrl = "https://docs.oracle.com/javase/8/docs/api/java/lang/String.html";
                 break;
             default:
-                return Mono.error(new org.springframework.web.server.ResponseStatusException(
-                        org.springframework.http.HttpStatus.BAD_REQUEST, "URL path must be archive or javadoc"
-                ));
+                return Mono.just(ResponseEntity
+                        .badRequest()
+                        .body("URL path must be archive or javadoc"));
         }
 
-        //Calling rate limiter service to abort processing, providing IP to it
         FilterFieldIP ipToFilter = new FilterFieldIP(request.getRemoteAddr());
+
         if (!rateLimiterService.passRequestByFilterField(ipToFilter)) {
-            return Mono.just("Rate limit exceeded")
-                    .flatMap(msg -> Mono.error(new org.springframework.web.server.ResponseStatusException(
-                            org.springframework.http.HttpStatus.TOO_MANY_REQUESTS, rateLimiterService.getStatistics(ipToFilter)
-                    )));
+            HttpHeaders responseHeaders = addRateLimitHeaders(new HttpHeaders(), ipToFilter);
+            return Mono.just(ResponseEntity
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
+                    .headers(responseHeaders)
+                    .body("Rate limit exceeded"));
         }
 
         return webClient.method(method)
                 .uri(targetUrl)
-                //.headers(httpHeaders -> httpHeaders.addAll(headers))
                 .headers(httpHeaders -> headers.forEach((key, values) -> {
                     if (!HttpHeaders.HOST.equalsIgnoreCase(key)) {
                         httpHeaders.addAll(key, values);
                     }
-                })) //remove HOST header to avoid using wrong port and add all other headers
+                }))
                 .body(body != null ? body : Mono.empty(), String.class)
                 .retrieve()
-                .bodyToMono(String.class);
+                .toEntity(String.class)
+                .map(responseEntity -> ResponseEntity.status(responseEntity.getStatusCode())
+                        .headers(addRateLimitHeaders(responseEntity.getHeaders(), ipToFilter))
+                        .body(responseEntity.getBody())
+                );
     }
+
+    private HttpHeaders addRateLimitHeaders(HttpHeaders original, FilterFieldIP ipToFilter) {
+        Map<String, Long> stats = rateLimiterService.getStatistics(ipToFilter);
+        HttpHeaders headers = new HttpHeaders();
+        headers.putAll(original);
+        headers.add("X-RateLimit-CurrentRequests", String.valueOf(stats.getOrDefault("REQUESTS", 0L)));
+        headers.add("X-RateLimit-RequestsLimit", String.valueOf(stats.getOrDefault("THRESHOLD", 0L)));
+        headers.add("X-RateLimit-DurationWindow", String.valueOf(stats.getOrDefault("DURATION", 0L)));
+        return headers;
+    }
+
+
 }

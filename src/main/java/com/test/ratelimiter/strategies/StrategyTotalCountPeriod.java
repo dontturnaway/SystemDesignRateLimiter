@@ -10,13 +10,13 @@ import java.util.Queue;
 
 
 //Could also be done in Redis using ZSET in Redis in case of multicurrency
-public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T> {
+public class StrategyTotalCountPeriod<T> implements RateLimiterStrategyInterface<T> {
 
     private final HashMap<FilterField<T>, Queue<Instant>> requestCounter = new HashMap<>();
-    private final java.time.Duration slidingWindowDuration;
+    private final Duration slidingWindowDuration;
     private final Integer maxRequestsThreshold;
 
-    public StrategySlidingWindow(Duration slidingWindowDuration, Integer maxRequestsThreshold) {
+    public StrategyTotalCountPeriod(Duration slidingWindowDuration, Integer maxRequestsThreshold) {
         if (slidingWindowDuration == null || maxRequestsThreshold == null) {
             throw new IllegalArgumentException("slidingWindowDuration and thresholdSize cannot be null");
         }
@@ -29,7 +29,7 @@ public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T>
         synchronized (this) {
             this.updateStatisticsByFilterField(filterField);
             var result =  requestCounter.get(filterField).size() <= maxRequestsThreshold;
-            System.out.println("RESULT: " + result + " REQUEST_COUNT: " + requestCounter.get(filterField).size());
+            System.out.println("RESULT: " + result + " REQUEST_COUNT: " + requestCounter.get(filterField));
             return result;
         }
     }

@@ -7,5 +7,5 @@ import java.util.HashMap;
 public interface RateLimiterStrategyInterface<T> {
     boolean passRequestByFilterField(FilterField<T> filterField);
     String getStrategyName();
-    HashMap<String, Integer> getStatistics(FilterField<T> filterField);
+    HashMap<String, Long> getStatistics(FilterField<T> filterField);
 }
