@@ -35,10 +35,7 @@ public class RateLimiterServiceImpl<T> implements RateLimiterService<T> {
         if (filterField == null) {
             throw new IllegalArgumentException("filterField cannot be null");
         }
-        HashMap<String, Long> statistics = new HashMap<>();
-        statistics.put("REQUESTS", rateLimiterStrategy.getStatistics(filterField).getOrDefault("REQUESTS", 0L));
-        statistics.put("THRESHOLD", rateLimiterStrategy.getStatistics(filterField).getOrDefault("THRESHOLD", 0L));
-        return statistics;
+        return rateLimiterStrategy.getStatistics(filterField);
     }
 
 
