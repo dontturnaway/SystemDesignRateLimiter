@@ -4,7 +4,7 @@ package com.test.ratelimiter.service;
 import com.test.ratelimiter.model.FilterField;
 import com.test.ratelimiter.strategies.RateLimitStrategyType;
 import com.test.ratelimiter.strategies.RateLimiterStrategyInterface;
-import com.test.ratelimiter.strategies.StrategySlidingWindow;
+import com.test.ratelimiter.strategies.StrategySlidingWindowOld;
 import com.test.ratelimiter.strategies.StrategyTotalCountPerPeriod;
 
 import java.time.Duration;
@@ -20,16 +20,16 @@ public class RateLimiterServiceImpl<T> implements RateLimiterService<T> {
             throw new IllegalArgumentException("slidingWindowDuration and thresholdSize cannot be null");
         }
         switch (rateLimitStrategyType) {
-            case SLIDING_WINDOW -> this.rateLimiterStrategy = new StrategySlidingWindow<>(slidingWindowDuration, thresholdSize);
+            case SLIDING_WINDOW -> this.rateLimiterStrategy = new StrategySlidingWindowOld<>(slidingWindowDuration, thresholdSize);
             case TOTAL_COUNT -> this.rateLimiterStrategy = new StrategyTotalCountPerPeriod<>();
         }
     }
 
-    public boolean passRequest(FilterField<T> filterField) {
-        return rateLimiterStrategy.passRequest(filterField);
+    public boolean passRequestByFilterField(FilterField<T> filterField) {
+        return rateLimiterStrategy.passRequestByFilterField(filterField);
     }
 
-    public String getStrategyInfo() {
+    public String getStrategyName() {
         return rateLimiterStrategy.toString();
     }
 

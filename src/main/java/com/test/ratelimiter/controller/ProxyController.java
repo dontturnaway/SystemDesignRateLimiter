@@ -48,7 +48,7 @@ public class ProxyController {
 
         //Calling rate limiter service to abort processing, providing IP to it
         FilterFieldIP ipToFilter = new FilterFieldIP(request.getRemoteAddr());
-        if (!rateLimiterService.passRequest(ipToFilter)) {
+        if (!rateLimiterService.passRequestByFilterField(ipToFilter)) {
             return Mono.just("Rate limit exceeded")
                     .flatMap(msg -> Mono.error(new org.springframework.web.server.ResponseStatusException(
                             org.springframework.http.HttpStatus.TOO_MANY_REQUESTS, rateLimiterService.getStatistics(ipToFilter)
@@ -58,13 +58,11 @@ public class ProxyController {
         return webClient.method(method)
                 .uri(targetUrl)
                 //.headers(httpHeaders -> httpHeaders.addAll(headers))
-                .headers(httpHeaders -> {
-                    headers.forEach((key, values) -> {
-                        if (!HttpHeaders.HOST.equalsIgnoreCase(key)) {
-                            httpHeaders.addAll(key, values);
-                        }
-                    });
-                }) //remove HOST header to avoid using wrong port and add all other headers
+                .headers(httpHeaders -> headers.forEach((key, values) -> {
+                    if (!HttpHeaders.HOST.equalsIgnoreCase(key)) {
+                        httpHeaders.addAll(key, values);
+                    }
+                })) //remove HOST header to avoid using wrong port and add all other headers
                 .body(body != null ? body : Mono.empty(), String.class)
                 .retrieve()
                 .bodyToMono(String.class);

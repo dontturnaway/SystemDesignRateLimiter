@@ -8,7 +8,7 @@ public class StrategyTotalCountPerPeriod<T> implements RateLimiterStrategyInterf
 
 
     @Override
-    public boolean passRequest(FilterField<T> filterField) {
+    public boolean passRequestByFilterField(FilterField<T> filterField) {
         return false;
     }
 

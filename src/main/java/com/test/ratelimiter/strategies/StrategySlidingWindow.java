@@ -6,51 +6,46 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Queue;
 
 
-//Also could be done in more optimal way with HashMap<Key, Queue<Timestamp>> or using ZSET in Redis
+//Could also be done in Redis using ZSET in Redis in case of multicurrency
 public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T> {
 
-    private final HashMap<FilterField<T>, Integer> requestCounter = new HashMap<>();
-    private final Queue<Map<FilterField<T>, Instant>> requestQueue = new LinkedList<>();
+    private final HashMap<FilterField<T>, Queue<Instant>> requestCounter = new HashMap<>();
     private final java.time.Duration slidingWindowDuration;
-    private final Integer thresholdSize;
+    private final Integer maxRequestsThreshold;
 
-    public StrategySlidingWindow(Duration slidingWindowDuration, Integer thresholdSize) {
-        if (slidingWindowDuration == null || thresholdSize == null) {
+    public StrategySlidingWindow(Duration slidingWindowDuration, Integer maxRequestsThreshold) {
+        if (slidingWindowDuration == null || maxRequestsThreshold == null) {
             throw new IllegalArgumentException("slidingWindowDuration and thresholdSize cannot be null");
         }
         this.slidingWindowDuration = slidingWindowDuration;
-        this.thresholdSize = thresholdSize;
+        this.maxRequestsThreshold = maxRequestsThreshold;
     }
 
     @Override
-    public boolean passRequest(FilterField<T> filterField) {
+    public boolean passRequestByFilterField(FilterField<T> filterField) {
         synchronized (this) {
             this.updateStatisticsByFilterField(filterField);
-            var result =  requestCounter.get(filterField) <= thresholdSize;
+            var result =  requestCounter.get(filterField).size() <= maxRequestsThreshold;
             System.out.println("RESULT: " + result + " REQUEST_COUNT: " + requestCounter.get(filterField));
             return result;
         }
     }
 
     private void updateStatisticsByFilterField(FilterField<T> filterField) {
-            while (!requestQueue.isEmpty() && (!fitsSlidingWindow(requestQueue.peek()))) {
-                FilterField<T> staleIp = requestQueue.poll().entrySet().iterator().next().getKey();
-                requestCounter.put(staleIp, requestCounter.get(staleIp) - 1);
-            }
-            requestCounter.put(filterField, requestCounter.getOrDefault(filterField, 0) + 1);
-            requestQueue.add(Map.of(filterField, Instant.now()));
-    }
+        if (!requestCounter.containsKey(filterField)) {
+            requestCounter.put(filterField, new LinkedList<>());
+        }
 
-    public boolean fitsSlidingWindow(Map<FilterField<T>, Instant> currentIpDate) {
-        Instant currentIpDateExtracted = currentIpDate.entrySet().iterator().next().getValue();
-        Duration elapsed = Duration.between(currentIpDateExtracted, Instant.now());
-        return slidingWindowDuration.compareTo(elapsed) > 0;
+        var currentIpQueue = requestCounter.get(filterField);
+        currentIpQueue.add(Instant.now());
+        while (currentIpQueue.peek() != null &&
+                Duration.between(currentIpQueue.peek(), Instant.now()).compareTo(slidingWindowDuration) > 0) {
+            currentIpQueue.poll();
+        }
     }
-
 
     @Override
     public String getStrategyName() {
@@ -60,8 +55,8 @@ public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T>
     @Override
     public HashMap<String, Integer> getStatistics(FilterField<T> filterField) {
         HashMap<String, Integer> result = new HashMap<>();
-        result.put("REQUESTS", requestCounter.getOrDefault(filterField,0));
-        result.put("THRESHOLD", this.thresholdSize);
+        result.put("REQUESTS", requestCounter.getOrDefault(filterField, new LinkedList<>()).size());
+        result.put("THRESHOLD", this.maxRequestsThreshold);
         return result;
     }
 
