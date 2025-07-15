@@ -18,7 +18,7 @@ public class ProxyController {
 
     private final WebClient webClient = WebClient.create();
     private final RateLimiterService<byte[]> rateLimiterService =
-            new RateLimiterServiceImpl<>(RateLimitStrategyType.SLIDING_WINDOW,
+            new RateLimiterServiceImpl<>(RateLimitStrategyType.TOTAL_COUNT,
                     Duration.ofMinutes(1),
                     5);
 

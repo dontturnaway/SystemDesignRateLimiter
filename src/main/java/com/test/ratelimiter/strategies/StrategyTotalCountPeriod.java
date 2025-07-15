@@ -5,45 +5,48 @@ import com.test.ratelimiter.model.FilterField;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.Map;
 
 
-//Could also be done in Redis using ZSET in Redis in case of multicurrency
 public class StrategyTotalCountPeriod<T> implements RateLimiterStrategyInterface<T> {
 
-    private final HashMap<FilterField<T>, Queue<Instant>> requestCounter = new HashMap<>();
-    private final Duration slidingWindowDuration;
-    private final Integer maxRequestsThreshold;
+    private final HashMap<FilterField<T>, Map<Long, Long>> requestCounter = new HashMap<>();
+    private final Duration windowDuration;
+    private final Integer windowSize;
 
-    public StrategyTotalCountPeriod(Duration slidingWindowDuration, Integer maxRequestsThreshold) {
-        if (slidingWindowDuration == null || maxRequestsThreshold == null) {
+    public StrategyTotalCountPeriod(Duration slidingWindowDuration, Integer windowSize) {
+        if (slidingWindowDuration == null || windowSize == null) {
             throw new IllegalArgumentException("slidingWindowDuration and thresholdSize cannot be null");
         }
-        this.slidingWindowDuration = slidingWindowDuration;
-        this.maxRequestsThreshold = maxRequestsThreshold;
+        this.windowDuration = slidingWindowDuration;
+        this.windowSize = windowSize;
     }
 
     @Override
     public boolean passRequestByFilterField(FilterField<T> filterField) {
         synchronized (this) {
             this.updateStatisticsByFilterField(filterField);
-            var result =  requestCounter.get(filterField).size() <= maxRequestsThreshold;
-            System.out.println("RESULT: " + result + " REQUEST_COUNT: " + requestCounter.get(filterField));
+            long currentRequestsCount = requestCounter.get(filterField).entrySet().iterator().next().getValue();
+            var result =  currentRequestsCount <= windowSize;
+            System.out.println("RESULT: " + result + " REQUEST_COUNT: " + currentRequestsCount);
             return result;
         }
     }
 
     private void updateStatisticsByFilterField(FilterField<T> filterField) {
+        Instant now = Instant.now();
+        long windowStartSeconds = (now.getEpochSecond() / windowDuration.toSeconds()) * windowDuration.toSeconds();
+
         if (!requestCounter.containsKey(filterField)) {
-            requestCounter.put(filterField, new LinkedList<>());
+            requestCounter.put(filterField, new HashMap<>(Map.of(windowStartSeconds, 1L)));
+            return;
         }
 
-        var currentIpQueue = requestCounter.get(filterField);
-        currentIpQueue.add(Instant.now());
-        while (currentIpQueue.peek() != null &&
-                Duration.between(currentIpQueue.peek(), Instant.now()).compareTo(slidingWindowDuration) > 0) {
-            currentIpQueue.poll();
+        if (requestCounter.get(filterField).containsKey(windowStartSeconds)) {
+            requestCounter.get(filterField).put(windowStartSeconds, requestCounter.get(filterField).get(windowStartSeconds) + 1L);
+        } else {
+            requestCounter.remove(filterField);
+            requestCounter.put(filterField, Map.of(windowStartSeconds, 1L));
         }
     }
 
@@ -55,9 +58,9 @@ public class StrategyTotalCountPeriod<T> implements RateLimiterStrategyInterface
     @Override
     public HashMap<String, Long> getStatistics(FilterField<T> filterField) {
         HashMap<String, Long> result = new HashMap<>();
-        result.put("REQUESTS", (long) requestCounter.getOrDefault(filterField, new LinkedList<>()).size());
-        result.put("THRESHOLD", Long.valueOf(this.maxRequestsThreshold));
-        result.put("DURATION", slidingWindowDuration.toSeconds());
+        result.put("REQUESTS", requestCounter.get(filterField).entrySet().iterator().next().getValue());
+        result.put("THRESHOLD", Long.valueOf(this.windowSize));
+        result.put("DURATION", windowDuration.toSeconds());
         return result;
     }
 
