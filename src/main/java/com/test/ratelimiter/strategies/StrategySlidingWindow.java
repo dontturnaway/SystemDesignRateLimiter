@@ -38,7 +38,7 @@ public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T>
         if (!requestCounter.containsKey(filterField)) {
             requestCounter.put(filterField, new LinkedList<>());
         }
-        var instantNow = Instant.now();
+        var instantNow = Instant.now(); //do I need to use clock?
 
         var currentIpQueue = requestCounter.get(filterField);
         currentIpQueue.add(instantNow);
