@@ -38,11 +38,12 @@ public class StrategySlidingWindow<T> implements RateLimiterStrategyInterface<T>
         if (!requestCounter.containsKey(filterField)) {
             requestCounter.put(filterField, new LinkedList<>());
         }
+        var instantNow = Instant.now();
 
         var currentIpQueue = requestCounter.get(filterField);
-        currentIpQueue.add(Instant.now());
+        currentIpQueue.add(instantNow);
         while (currentIpQueue.peek() != null &&
-                Duration.between(currentIpQueue.peek(), Instant.now()).compareTo(slidingWindowDuration) > 0) {
+                Duration.between(currentIpQueue.peek(), instantNow).compareTo(slidingWindowDuration) > 0) {
             currentIpQueue.poll();
         }
     }
